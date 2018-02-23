@@ -1,143 +1,141 @@
-﻿// Author: Alexander Smith
-// Date: 2/7/2018
-// Description: A small C# script that utilises a GUI to calculate the cost of carpet based off of the area required.
-
-// From my understanding, these are like the C# equivalent to Python imports.
-// I'd like to imagine this where developers could import/use 3rd party packages.
+﻿// Author: Alex Smith
+// Date: 23/2/18
+// Description: A c# script that reads, writes and saves data from a text file.
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Globalization;
+using System.IO;
 using System.Windows.Forms;
 
-namespace CarpetOrders
+namespace HiScoreTable
 {
-    public partial class FrmCarpetOrders : Form
+    public partial class FrmHiScore : Form
     {
-        public FrmCarpetOrders()
+        // Declaring private variables.
+        // '_mPreviousScore' is used when inputing a score value via the scroll bar.
+        private static int _mPreviousScore;    // String
+        // '_mFileName' is the text document that the script reads during startup.
+        private static string _mFileName;    //String
+
+        public FrmHiScore()
         {
+            // Creates and initializes the user interface/form.
             InitializeComponent();
 
-            // Date.
-            // The following line auto loads the system's date.
-            // See line 25 ("dd/MM/yyyy") to change the format.
-            txtDate.Text = DateTime.Now.ToString("dd/MM/yyyy");
-
-            // Setting to 'Read Only'.
-            // The following just sets the calculated results to 'Read Only'. This is done so that the user
-            // can't change the results by hand. I wish there was a way to implement this later on in the script
-            // (between lines 104 and 108, when I make give the textboxes vaules).
-            // -- Side Note --
-            // I should probably stop referencing lines in my internal documentation because this c# script is
-            // always under going maintenance :p.
-            txtDate.ReadOnly = true;
-            txtCalName.ReadOnly = true;
-            txtArea.ReadOnly = true;
-            txtCost.ReadOnly = true;
-            txtDiscount.ReadOnly = true;
-            txtTotalCost.ReadOnly = true;
+            // Reading and importing data.
+            // The following tells the script to read from the file 'HiScore.txt' (a text file).
+            _mFileName = "HiScore.txt";
         }
 
-        // Calculation button.
-        // This button calculates and outputs values.
-        private void btnCalculate_Click(object sender, EventArgs e)
+        // Importing data from '_mFileName'.
+        // The following imports data from '_mFileName' on the form's initial startup.
+        private void FrmHiScore_Load(object sender, EventArgs e)
         {
-            // Defining variables and data types.
-            // Linking them back to the form ('Form1.Designer.cs').
-            // 'const' is used here because strInvalidSelection's string value will never change.
-            const string strInvalidSelection = "Invalid selection! Choose between Quality No. 1, 2, 3 or 4"; // String.
-            var strName = txtName.Text; // String (This was never used, so why did we ask for it!? I fixed this :p).
-            var intQualityNo = int.Parse(txtQuality.Text); // Integer.
-            decimal decRWidth = decimal.Parse(txtWidth.Text), decRLength = decimal.Parse(txtLength.Text); // Decimal.
-            var decRArea = decRWidth * decRLength; // Calculating the room's area (Lenght * Width = Area).
-            var boolTradeDiscount = chkDiscount.Checked; // Boolean.
-
-            // Using Dictionaries and calculating Cost.
-            // Since the user has to choose between quality 1-4, the variable 'intQualityNo' is subbed into the
-            // dictionary. For example if the user entered '1', the variable cost would equal their area multiplied by
-            // 100.
-            // -- Side note --
-            // This was original a switch but as of 2/18/2018, I've turned it into a dictionary. Look at how much
-            // neater it is!
-            var qualityList = new Dictionary<int, int> {{1, 100}, {2, 70}, {3, 45}, {4, 30}};
-
-            if (qualityList.ContainsKey(intQualityNo))
+            // StreamReader is used to read the variable 'file'.
+            using (var file = new StreamReader(_mFileName))
             {
-                var decCost = qualityList[intQualityNo] * decRArea; // Decimal.
-
-                // Calculating a discount.
-                // If the user asked for a Trade discount, then...
-                decimal decDiscount; // Decimal.
-                if (boolTradeDiscount)
+                string line; // String
+                // 'While reading lines from the file...'
+                while ((line = file.ReadLine()) != null)
                 {
-                    // Discount is equal to the cost, multiplied by 0.1
-                    decDiscount = decCost * Convert.ToDecimal(0.1);
+                    // Print past entries from the text file to the listbox.
+                    listHighScore.Items.Add(line);
                 }
-                // If they didn't, then...
-                else
-                {
-                    // The user is given a discount of $0.
-                    decDiscount = 0;
-                }
+                // Stops reading the file once all lines have been read.
+                file.Close();
+            }
+        }
 
-                // To calculate the total cost, this line subtracts the discount from the cost.
-                var decTotalCost = decCost - decDiscount;
+        // Add button.
+        // Adds a user entered record to the text document.
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            // Adds 'txtName' (username) and 'txtScore' (score) to 'listHighScore' (the listbox) as an item.
+            // The colon is here purely for formatting so that a record is printed as 'username:score'.
+            listHighScore.Items.Add(txtName.Text + ":" + txtScore.Text);
+        }
 
-                // Formating.
-                // I had to introduce these new variables so that they can be formated into local currency.
-                var strCost = $"{decCost:C}";
-                var strDiscount = $"{decDiscount:C}";
-                var strTotalCost = $"{decTotalCost:C}";
-                // Colors.
-                // I know it's spelt colour, but most programming languages use 'American English' isn't of
-                // 'British English'. So as soon as I start programming, I throw all my spelling out the
-                // door...
-                txtArea.BackColor = Color.LightYellow;
-                txtCost.BackColor = Color.LightGreen;
-                txtTotalCost.BackColor = Color.LightGreen;
-                txtDiscount.BackColor = Color.LightCoral;
+        // Remove button.
+        // Removes a user entered record from the text document.
+        private void btnRemove_Click(object sender, EventArgs e)
+        {
+            // The variable 'index' is the record the user selects with their mouse.
+            var index = listHighScore.SelectedIndex;
+            // The variable 'index' is then removed from the listbox and text file.
+            listHighScore.Items.RemoveAt(index);
+        }
 
-                // Converting back to strings.
-                // A lot of the variables have the data type of integer and decimal,
-                // so they need to be converted back into strings so that they can be displayed within a textbox.
-                txtCalName.Text = strName;
-                txtArea.Text = decRArea.ToString(CultureInfo.CurrentCulture);
-                txtCost.Text = strCost.ToString(CultureInfo.CurrentCulture);
-                txtDiscount.Text = strDiscount.ToString(CultureInfo.CurrentCulture);
-                txtTotalCost.Text = strTotalCost.ToString(CultureInfo.CurrentCulture);
+        // Formating and error handling.
+        private void txtScore_TextChanged(object sender, EventArgs e)
+        {
+            // For convenice shake, the program starts by selecting the top value from the listbox.
+            var selectValue = txtScore.SelectionStart;
+
+            // The string is then parsed into an integer.
+            if (int.TryParse(txtScore.Text, out var scoreValue))
+            {
+                // Users can't give a value higher than 9999.
+                if (scoreValue > 9999) scoreValue = _mPreviousScore;
+                _mPreviousScore = scoreValue;
+                // Converts the integer back into a printable string.
+                txtScore.Text = scoreValue.ToString();
+                txtScore.SelectionStart = txtScore.Text.Length >= selectValue ? txtScore.Text.Length : selectValue;
             }
             else
             {
-                Console.WriteLine(strInvalidSelection);
+                // The last couple of lines do the same as the code above, but for when the
+                // program can't find a previous score or if the user hasn't entered a score.
+                if (_mPreviousScore != 0 && txtScore.Text != "")
+                {
+                    txtScore.Text = _mPreviousScore.ToString();
+                    txtScore.SelectionStart =
+                        txtScore.Text.Length >= selectValue ? txtScore.Text.Length : selectValue;
+                }
+                // If it doesn't find anything, then clear both fields (used as a last resort).
+                else
+                {
+                    txtScore.Clear();
+                    txtScore.SelectionStart = 0;
+                }
             }
         }
 
-        // Exit button.
-        // When 'btnExit' is clicked, it runs the command 'Close();'.
-        // This will just stop and close the program, self explanatory.
-        private void btnExit_Click(object sender, EventArgs e)
+        // Scroll bar.
+        // As well as using the textbox, the scroll bar can be used to enter a value for the user's score.
+        // I have no idea why you would want to do this, as I believe it to be an inferior way to add a record but I
+        // was asked for it.
+        private void vScrollScore_Scroll(object sender, ScrollEventArgs e)
         {
-            Close();
+            // The previous score becomes the 'ScrollScore' (an integer).
+            _mPreviousScore = vScrollScore.Value;
+            // Converts the score back into a string.
+            txtScore.Text = vScrollScore.Value.ToString();
         }
 
-        // Resetting and clearing fields.
-        // The following loop clears every textbox within the form.
-        // It's now a loop!
-        private void btnReset_Click(object sender, EventArgs e)
+        // Saving changes.
+        // We need a way to save chnages to the text file.
+        private static void SaveToFile()
         {
-            void FuncClear(IEnumerable controls)
+            // StreamWriter is used to write changes to the variable '_mFileName' (HiScore.txt).
+            using (var file = new StreamWriter(_mFileName))
             {
-                foreach (Control clearControl in controls)
-                    if (clearControl is TextBox)
-                        (clearControl as TextBox).Clear();
-                    else
-                    {
-                        FuncClear(clearControl.Controls);
-                    }
+                // A foreach is used to write changes to any new lines.
+                // The variable 'line' is equal to an item from the listbox.
+                // 'foreach line in the listbox...'
+                foreach (var line in listHighScore.Items)
+                {
+                    // Writes changes.
+                    file.WriteLine(line);
+                }
             }
+        }
 
-            FuncClear(Controls);
+        // Quit button.
+        // Saves changes and closes the program.
+        private void btnQuit_Click(object sender, EventArgs e)
+        {
+            // 'SaveToFile' is the method I created above this one, it writes changes to _mFileName.
+            SaveToFile();
+            // 'Close' is a built-in method, it stops and closes the program.
+            Close();
         }
     }
 }
