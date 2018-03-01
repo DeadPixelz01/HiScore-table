@@ -14,6 +14,8 @@ namespace HiScoreTable
         private static int _mPreviousScore;    // String
         // '_mFileName' is the text document that the script reads during startup.
         private static string _mFileName;    //String
+        // I'm following C# naming conventions when it comes to naming memeber variables,
+        // don't ask me to change the prefix to 'str' or 'int'.
 
         public FrmHiScore()
         {
@@ -30,17 +32,17 @@ namespace HiScoreTable
         private void FrmHiScore_Load(object sender, EventArgs e)
         {
             // StreamReader is used to read the variable 'file'.
-            using (var file = new StreamReader(_mFileName))
+            using (var streamreadFile = new StreamReader(_mFileName))
             {
-                string line; // String
+                string strLine; // String
                 // 'While reading lines from the file...'
-                while ((line = file.ReadLine()) != null)
+                while ((strLine = streamreadFile.ReadLine()) != null)
                 {
                     // Print past entries from the text file to the listbox.
-                    listHighScore.Items.Add(line);
+                    listHighScore.Items.Add(strLine);
                 }
                 // Stops reading the file once all lines have been read.
-                file.Close();
+                streamreadFile.Close();
             }
         }
 
@@ -58,26 +60,26 @@ namespace HiScoreTable
         private void btnRemove_Click(object sender, EventArgs e)
         {
             // The variable 'index' is the record the user selects with their mouse.
-            var index = listHighScore.SelectedIndex;
+            var intIndex = listHighScore.SelectedIndex;
             // The variable 'index' is then removed from the listbox and text file.
-            listHighScore.Items.RemoveAt(index);
+            listHighScore.Items.RemoveAt(intIndex);
         }
 
         // Formating and error handling.
         private void txtScore_TextChanged(object sender, EventArgs e)
         {
             // For convenice shake, the program starts by selecting the top value from the listbox.
-            var selectValue = txtScore.SelectionStart;
+            var intSelectValue = txtScore.SelectionStart;
 
             // The string is then parsed into an integer.
-            if (int.TryParse(txtScore.Text, out var scoreValue))
+            if (int.TryParse(txtScore.Text, out var intScoreValue))
             {
                 // Users can't give a value higher than 9999.
-                if (scoreValue > 9999) scoreValue = _mPreviousScore;
-                _mPreviousScore = scoreValue;
+                if (intScoreValue > 9999) intScoreValue = _mPreviousScore;
+                _mPreviousScore = intScoreValue;
                 // Converts the integer back into a printable string.
-                txtScore.Text = scoreValue.ToString();
-                txtScore.SelectionStart = txtScore.Text.Length >= selectValue ? txtScore.Text.Length : selectValue;
+                txtScore.Text = intScoreValue.ToString();
+                txtScore.SelectionStart = txtScore.Text.Length >= intSelectValue ? txtScore.Text.Length : intSelectValue;
             }
             else
             {
@@ -87,7 +89,7 @@ namespace HiScoreTable
                 {
                     txtScore.Text = _mPreviousScore.ToString();
                     txtScore.SelectionStart =
-                        txtScore.Text.Length >= selectValue ? txtScore.Text.Length : selectValue;
+                        txtScore.Text.Length >= intSelectValue ? txtScore.Text.Length : intSelectValue;
                 }
                 // If it doesn't find anything, then clear both fields (used as a last resort).
                 else
@@ -115,15 +117,15 @@ namespace HiScoreTable
         private static void SaveToFile()
         {
             // StreamWriter is used to write changes to the variable '_mFileName' (HiScore.txt).
-            using (var file = new StreamWriter(_mFileName))
+            using (var streamwriteFile = new StreamWriter(_mFileName))
             {
                 // A foreach is used to write changes to any new lines.
                 // The variable 'line' is equal to an item from the listbox.
                 // 'foreach line in the listbox...'
-                foreach (var line in listHighScore.Items)
+                foreach (var objLine in listHighScore.Items)
                 {
                     // Writes changes.
-                    file.WriteLine(line);
+                    streamwriteFile.WriteLine(objLine);
                 }
             }
         }
